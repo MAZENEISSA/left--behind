@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Left Behind — Stories of the Hardware We Left in Space</title>
+<meta name="description" content="An interactive storytelling site for young space fans about the hardware NASA left on the Moon, on Mars and in deep space.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070f; --panel:#0e1426; --panel2:#151d36; --line:#26304f;
+  --text:#e9edf7; --muted:#9aa5c4; --accent:#ffb547; --moon:#cfd6e6; --mars:#e2683c; --deep:#6fa8ff;
+  --ok:#3ddc97; --off:#8a93ad; --gone:#ff6b6b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+h1,h2,h3,h4{font-family:"Space Grotesk",sans-serif;line-height:1.15}
+a{color:var(--accent)}
+#stars{position:fixed;inset:0;z-index:-1}
+.wrap{max-width:1150px;margin:0 auto;padding:0 22px}
+nav{position:sticky;top:0;z-index:50;background:rgba(5,7,15,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+.logo{font-family:"Space Grotesk";font-weight:700;font-size:1.2rem;letter-spacing:.5px}
+.logo span{color:var(--accent)}
+nav ul{display:flex;gap:22px;list-style:none}
+nav a{color:var(--muted);text-decoration:none;font-size:.93rem}
+nav a:hover{color:var(--text)}
+@media(max-width:720px){nav ul{display:none}}
+
+.hero{min-height:88vh;display:flex;align-items:center;padding:60px 0}
+.hero small{color:var(--accent);letter-spacing:3px;text-transform:uppercase;font-weight:600;font-size:.8rem}
+.hero h1{font-size:clamp(2.4rem,6vw,4.6rem);margin:14px 0 20px;max-width:850px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--moon),var(--accent),var(--mars));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:1.15rem;color:var(--muted);max-width:640px}
+.stats{display:flex;flex-wrap:wrap;gap:16px;margin-top:38px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;min-width:150px}
+.stat b{display:block;font-family:"Space Grotesk";font-size:2rem;color:var(--accent)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.btn{display:inline-block;margin-top:34px;background:var(--accent);color:#1a1200;font-weight:700;padding:14px 26px;border-radius:999px;text-decoration:none;border:none;cursor:pointer;font-size:1rem}
+.btn:hover{filter:brightness(1.1)}
+
+section{padding:80px 0}
+.sec-head{margin-bottom:34px}
+.sec-head small{color:var(--accent);letter-spacing:2px;text-transform:uppercase;font-weight:600;font-size:.78rem}
+.sec-head h2{font-size:clamp(1.8rem,4vw,2.7rem);margin:8px 0 10px}
+.sec-head p{color:var(--muted);max-width:680px}
+
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:10px 20px;border-radius:999px;cursor:pointer;font-weight:600;font-family:inherit;font-size:.95rem}
+.tab.active[data-w="moon"]{background:var(--moon);color:#111;border-color:var(--moon)}
+.tab.active[data-w="mars"]{background:var(--mars);color:#fff;border-color:var(--mars)}
+.tab.active[data-w="deep"]{background:var(--deep);color:#06122a;border-color:var(--deep)}
+
+.explorer{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;align-items:start}
+@media(max-width:900px){.explorer{grid-template-columns:1fr}}
+.mapbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;position:relative}
+.mapbox svg{width:100%;height:auto;display:block}
+.maphint{font-size:.82rem;color:var(--muted);margin-top:10px;text-align:center}
+.pin{cursor:pointer}
+.pin circle.dot{transition:r .2s}
+.pin:hover circle.dot,.pin.sel circle.dot{r:9}
+.pin text{font-size:11px;fill:#fff;pointer-events:none;font-family:Inter;paint-order:stroke;stroke:#000;stroke-width:3px}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%{r:6;opacity:.9}100%{r:20;opacity:0}}
+
+.list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow:auto;padding-right:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:.2s;display:flex;gap:14px;align-items:center}
+.card:hover,.card.sel{border-color:var(--accent);background:var(--panel2)}
+.card .ico{font-size:1.7rem;width:44px;text-align:center;flex-shrink:0}
+.card h4{font-size:1.02rem}
+.card p{font-size:.84rem;color:var(--muted)}
+.badge{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:999px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.5px}
+.b-ok{background:rgba(61,220,151,.15);color:var(--ok)}
+.b-off{background:rgba(138,147,173,.18);color:#c4cbe0}
+.b-gone{background:rgba(255,107,107,.15);color:var(--gone)}
+
+.story{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.story.open{display:flex}
+.story-box{background:var(--panel);border:1px solid var(--line);border-radius:20px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:30px;position:relative;animation:pop .25s}
+@keyframes pop{from{transform:scale(.94);opacity:0}}
+.close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:1.6rem;cursor:pointer}
+.story-box .big{font-size:3rem}
+.story-box h3{font-size:1.7rem;margin:6px 0 4px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.meta span{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:.8rem;color:var(--muted)}
+.story-box p{margin-bottom:12px}
+.fact{background:linear-gradient(135deg,rgba(255,181,71,.13),rgba(255,181,71,.03));border-left:3px solid var(--accent);padding:12px 16px;border-radius:8px;margin:16px 0;font-size:.95rem}
+.fact b{color:var(--accent)}
+.science{font-size:.92rem;color:var(--muted)}
+.science b{color:var(--text)}
+
+.timeline{position:relative;margin-top:10px}
+.timeline::before{content:"";position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl{position:relative;padding:0 0 26px 54px}
+.tl::before{content:"";position:absolute;left:11px;top:6px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:3px solid var(--c,var(--accent))}
+.tl .yr{font-family:"Space Grotesk";font-weight:700;color:var(--c,var(--accent));font-size:1.05rem}
+.tl h4{font-size:1.05rem;margin:2px 0}
+.tl p{color:var(--muted);font-size:.92rem}
+
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:820px){.big3{grid-template-columns:1fr}}
+.why{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+.why .e{font-size:2rem}
+.why h3{margin:10px 0 8px;font-size:1.2rem}
+.why p{color:var(--muted);font-size:.93rem}
+
+.quiz{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px;max-width:720px}
+.q-prog{font-size:.82rem;color:var(--muted);margin-bottom:6px}
+.bar{height:6px;background:var(--panel2);border-radius:9px;margin-bottom:22px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.quiz h3{font-size:1.35rem;margin-bottom:18px}
+.opts{display:grid;gap:10px}
+.opt{background:var(--panel2);border:1px solid var(--line);color:var(--text);text-align:left;padding:14px 16px;border-radius:12px;cursor:pointer;font-size:1rem;font-family:inherit}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:rgba(61,220,151,.12)}
+.opt.wrong{border-color:var(--gone);background:rgba(255,107,107,.12)}
+.explain{margin-top:16px;color:var(--muted);font-size:.93rem;display:none}
+.explain.show{display:block}
+.qnext{margin-top:18px;display:none}
+
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.res a{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--text);font-size:.92rem}
+.res a:hover{border-color:var(--accent)}
+.res a small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<nav><div class="wrap">
+  <div class="logo">Left<span>Behind</span></div>
+  <ul>
+    <li><a href="#explore">Explore</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#why">Why it matters</a></li>
+    <li><a href="#quiz">Quiz</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <small>Abandoned but not Forgotten</small>
+  <h1>The machines we <em>left behind</em> still have stories to tell.</h1>
+  <p>Since the 1960s, NASA has left landers, rovers, mirrors, helicopters and probes on the Moon, on Mars and far out in deep space. Some still work. Some went silent long ago. All of them changed what we know about the universe.</p>
+  <div class="stats">
+    <div class="stat"><b data-count="3">0</b><span>moon buggies parked on the Moon</span></div>
+    <div class="stat"><b data-count="45">0</b><span>km driven by Opportunity on Mars</span></div>
+    <div class="stat"><b data-count="72">0</b><span>flights by the Ingenuity helicopter</span></div>
+    <div class="stat"><b data-count="1977">0</b><span>year the Voyagers launched, and they still talk to us</span></div>
+  </div>
+  <a href="#explore" class="btn">Start exploring 🚀</a>
+</div></header>
+
+<section id="explore"><div class="wrap">
+  <div class="sec-head">
+    <small>Interactive map</small>
+    <h2>Where did we leave them?</h2>
+    <p>Pick a world, then tap a dot on the map or a card in the list to open its story.</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-w="moon">🌕 The Moon</button>
+    <button class="tab" data-w="mars">🔴 Mars</button>
+    <button class="tab" data-w="deep">✨ Deep Space</button>
+  </div>
+  <div class="explorer">
+    <div class="mapbox"><svg id="map" viewBox="0 0 500 500"></svg><div class="maphint" id="hint"></div></div>
+    <div class="list" id="list"></div>
+  </div>
+</div></section>
+
+<section id="timeline"><div class="wrap">
+  <div class="sec-head">
+    <small>60 years of exploration</small>
+    <h2>A timeline of what we left</h2>
+    <p>Each one was a first, and each one made the next mission possible.</p>
+  </div>
+  <div class="timeline" id="tl"></div>
+</div></section>
+
+<section id="why"><div class="wrap">
+  <div class="sec-head">
+    <small>Not just junk</small>
+    <h2>Why this hardware still matters</h2>
+  </div>
+  <div class="big3">
+    <div class="why"><div class="e">🔦</div><h3>Some of it still works</h3><p>Scientists still bounce lasers off mirrors left by Apollo astronauts to measure the Moon's distance to within a few centimetres. The Voyagers still send data back from interstellar space.</p></div>
+    <div class="why"><div class="e">🏛️</div><h3>It's history you can see</h3><p>NASA's Lunar Reconnaissance Orbiter has photographed the Apollo landing sites from orbit: the lander bases, the rover tracks and even the astronauts' footpaths.</p></div>
+    <div class="why"><div class="e">🧪</div><h3>It teaches future missions</h3><p>When Apollo 12 astronauts brought back parts of the Surveyor 3 lander, engineers could study how materials hold up after years on the Moon. Lessons like that help design the next generation of explorers.</p></div>
+  </div>
+</div></section>
+
+<section id="quiz"><div class="wrap">
+  <div class="sec-head">
+    <small>Test yourself</small>
+    <h2>Mission Control Quiz</h2>
+    <p>How much do you remember? Get 5/5 to earn your Space Historian badge.</p>
+  </div>
+  <div class="quiz" id="quizbox"></div>
+</div></section>
+
+<section id="sources"><div class="wrap">
+  <div class="sec-head">
+    <small>NASA data & resources</small>
+    <h2>Where our stories come from</h2>
+    <p>Everything on this site is based on public NASA mission information. Explore more here:</p>
+  </div>
+  <div class="res">
+    <a href="https://nssdc.gsfc.nasa.gov/planetary/" target="_blank">NASA Space Science Data Coordinated Archive<small>Official records for every mission</small></a>
+    <a href="https://www.lroc.asu.edu/" target="_blank">Lunar Reconnaissance Orbiter Camera<small>Photos of Apollo sites from orbit</small></a>
+    <a href="https://www.nasa.gov/mission/apollo-11/" target="_blank">NASA Apollo Program<small>Mission histories and photos</small></a>
+    <a href="https://science.nasa.gov/mars/" target="_blank">NASA Mars Exploration<small>Viking to Perseverance</small></a>
+    <a href="https://science.nasa.gov/mission/voyager/" target="_blank">NASA Voyager Mission<small>Live status of Voyager 1 & 2</small></a>
+    <a href="https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/" target="_blank">Ingenuity Mars Helicopter<small>Flight logs and final images</small></a>
+    <a href="https://eyes.nasa.gov/" target="_blank">NASA's Eyes on the Solar System<small>See where spacecraft are right now</small></a>
+    <a href="https://www.nasa.gov/clps/" target="_blank">Commercial Lunar Payload Services<small>The newest landers on the Moon</small></a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Made for the 2026 NASA Space Apps Challenge · "Abandoned but not Forgotten" · Team mazennn<br>
+  Mission facts come from public NASA sources. This project is not endorsed by NASA.
+</div></footer>
+
+<div class="story" id="story"><div class="story-box" id="storybox"></div></div>
+
+<script>
+const ITEMS = {
+moon: [
+ {id:"a11",name:"Apollo 11",ico:"🦅",lat:0.67,lon:23.47,year:1969,status:"ok",st:"Mirror still in use",where:"Sea of Tranquility",
+  short:"The first footprints, and a mirror that still works.",
+  story:"On 20 July 1969, Neil Armstrong and Buzz Aldrin landed the lunar module Eagle on a flat plain called the Sea of Tranquility. When they left, the bottom half of Eagle, the descent stage, stayed behind as a launch pad. It is still there today, along with a US flag, a plaque, a seismometer and their footprints.",
+  fact:"The Laser Ranging Retroreflector they set up is a panel of special mirrors. More than 50 years later, observatories on Earth still fire lasers at it to measure the Moon's distance very precisely.",
+  science:"<b>Science it made possible:</b> Laser ranging showed that the Moon is slowly moving away from Earth, by about 3.8 cm every year."},
+ {id:"a12",name:"Apollo 12 & Surveyor 3",ico:"🤝",lat:-3.01,lon:-23.42,year:1969,status:"off",st:"Silent",where:"Ocean of Storms",
+  short:"Astronauts visited a robot that landed 2.5 years earlier.",
+  story:"In November 1969, Apollo 12 made a pinpoint landing right next to Surveyor 3, a robotic lander NASA had sent in 1967. Astronauts Pete Conrad and Alan Bean walked over and removed pieces of it, including its TV camera, to bring home.",
+  fact:"It is the only time humans have visited a robotic spacecraft on another world. The Surveyor 3 camera is now in a museum on Earth.",
+  science:"<b>Science it made possible:</b> Engineers studied how 2.5 years on the Moon had changed Surveyor's parts. It also proved spacecraft could land precisely, a skill needed for every later mission."},
+ {id:"a15",name:"Apollo 15 Rover",ico:"🚙",lat:26.13,lon:3.63,year:1971,status:"off",st:"Parked",where:"Hadley–Apennine",
+  short:"The first car driven on another world.",
+  story:"Apollo 15 brought the first Lunar Roving Vehicle, an electric buggy that folded up for the trip. Dave Scott and Jim Irwin drove it to the edge of a huge canyon called Hadley Rille. When they left, they parked it so its camera could film their launch back to orbit.",
+  fact:"Three moon buggies (from Apollo 15, 16 and 17) are still parked on the Moon. Apollo 15 also left a laser mirror that is still in use, the biggest of the Apollo mirrors.",
+  science:"<b>Science it made possible:</b> The rover let astronauts travel much further and collect many more rock samples, including the 'Genesis Rock', a piece of the Moon's ancient crust."},
+ {id:"a16",name:"Apollo 16 Telescope",ico:"🔭",lat:-8.97,lon:15.5,year:1972,status:"off",st:"Silent",where:"Descartes Highlands",
+  short:"The first observatory on the Moon.",
+  story:"Apollo 16 astronauts set up a gold-plated ultraviolet camera and spectrograph on the lunar surface. Because the Moon has no air, it could see ultraviolet light that Earth's atmosphere blocks.",
+  fact:"It took pictures of Earth's outer atmosphere, distant stars and galaxies. The telescope is still standing where the astronauts left it.",
+  science:"<b>Science it made possible:</b> It proved the Moon is a great place for telescopes, an idea scientists are still exploring for the future."},
+ {id:"a17",name:"Apollo 17",ico:"🌄",lat:20.19,lon:30.77,year:1972,status:"off",st:"Silent",where:"Taurus–Littrow Valley",
+  short:"The last time humans walked on the Moon.",
+  story:"In December 1972, Gene Cernan and geologist Harrison Schmitt explored a deep valley for three days. They drove their rover about 35 km and left behind a science station, the rover and a plaque on the lander's leg.",
+  fact:"Harrison Schmitt was the only professional scientist (a geologist) to walk on the Moon. He found orange soil made of tiny glass beads from ancient volcanoes.",
+  science:"<b>Science it made possible:</b> Samples from Apollo 17 helped scientists work out the history of volcanoes and giant impacts on the Moon."},
+ {id:"lcross",name:"LCROSS",ico:"💧",lat:-84.7,lon:-48.7,year:2009,status:"gone",st:"Crashed on purpose",where:"Cabeus crater, south pole",
+  short:"A crash that found water.",
+  story:"In 2009, NASA deliberately crashed a used rocket stage into a dark crater near the Moon's south pole. The LCROSS spacecraft flew through the cloud of debris, studied it, then crashed too.",
+  fact:"The debris cloud contained water ice! That's why the Moon's south pole is now the top target for future human bases.",
+  science:"<b>Science it made possible:</b> Water on the Moon could one day give astronauts drinking water, oxygen and even rocket fuel."},
+ {id:"im1",name:"Odysseus (IM-1)",ico:"🛰️",lat:-80.13,lon:1.44,year:2024,status:"off",st:"Silent",where:"Near the south pole",
+  short:"The first US landing in over 50 years.",
+  story:"In February 2024, Odysseus, built by the company Intuitive Machines and carrying NASA instruments, landed near the south pole. It came down a bit too fast and tipped onto its side, but it still sent back data and pictures.",
+  fact:"It was the first private spacecraft to land softly on the Moon, and the closest any lander had come to the south pole at that time.",
+  science:"<b>Science it made possible:</b> It tested technology for NASA's Commercial Lunar Payload Services, which uses companies to deliver science to the Moon."},
+ {id:"bg1",name:"Blue Ghost 1",ico:"👻",lat:18.56,lon:61.81,year:2025,status:"off",st:"Mission complete",where:"Mare Crisium",
+  short:"A picture-perfect private landing.",
+  story:"In March 2025, Firefly Aerospace's Blue Ghost lander touched down upright in Mare Crisium carrying 10 NASA instruments. It worked for a full lunar day, about 14 Earth days, before the lunar night arrived.",
+  fact:"It filmed a sunset from the Moon's surface, and drilled into the ground to measure heat coming from inside the Moon.",
+  science:"<b>Science it made possible:</b> Data on moon dust, heat flow and radiation will help protect future astronauts and their equipment."}
+],
+mars: [
+ {id:"v1",name:"Viking 1",ico:"🛸",lat:22.27,lon:-47.95,year:1976,status:"off",st:"Silent since 1982",where:"Chryse Planitia",
+  short:"America's first successful Mars landing.",
+  story:"Viking 1 landed in 1976 and sent back the first clear photos from the surface of Mars. It also carried a mini laboratory that tested Martian soil for signs of life.",
+  fact:"It was only meant to work for 90 days. Instead it worked for more than six years!",
+  science:"<b>Science it made possible:</b> Viking measured Mars' weather and air and showed us a cold, dry, rusty-red world."},
+ {id:"pf",name:"Sojourner",ico:"🤖",lat:19.13,lon:-33.22,year:1997,status:"off",st:"Silent",where:"Ares Vallis",
+  short:"The first rover on Mars, about the size of a microwave.",
+  story:"In 1997, Mars Pathfinder bounced down onto Mars inside giant airbags. It released Sojourner, a tiny six-wheeled rover that drove slowly from rock to rock studying what they were made of.",
+  fact:"Sojourner drove only about 100 metres in total, but it proved that rovers could work on Mars and opened the door for every rover since.",
+  science:"<b>Science it made possible:</b> Rounded pebbles at the site suggested that floods of water once rushed through the area."},
+ {id:"spirit",name:"Spirit",ico:"🔦",lat:-14.57,lon:175.47,year:2004,status:"off",st:"Silent since 2010",where:"Gusev Crater",
+  short:"A rover that kept going even with a broken wheel.",
+  story:"Spirit landed in 2004 for a 90-day mission. When one wheel stopped working, the team drove it backwards, dragging the broken wheel. In 2009 it got stuck in soft sand, and it went silent in 2010.",
+  fact:"The broken wheel accidentally dug up bright white soil that turned out to be almost pure silica, a sign of hot springs or steam vents in the past.",
+  science:"<b>Science it made possible:</b> Evidence that Mars once had hot water, an environment where tiny life could possibly have existed."},
+ {id:"opp",name:"Opportunity",ico:"🏃",lat:-1.95,lon:-5.53,year:2004,status:"off",st:"Silent since 2018",where:"Meridiani Planum",
+  short:"Planned for 90 days, it worked for almost 15 years.",
+  story:"Opportunity, Spirit's twin, landed in 2004. It drove more than 45 km, longer than a marathon, exploring craters across Mars. In 2018, a planet-wide dust storm blocked sunlight to its solar panels and it fell silent.",
+  fact:"Opportunity found small round 'blueberries' of a mineral called hematite, which usually forms in water.",
+  science:"<b>Science it made possible:</b> Strong evidence that liquid water once soaked the ground at its landing site."},
+ {id:"phx",name:"Phoenix",ico:"🧊",lat:68.22,lon:-125.75,year:2008,status:"off",st:"Silent",where:"Northern arctic plains",
+  short:"It touched Martian ice.",
+  story:"Phoenix landed near Mars' north pole in 2008. Its robotic arm dug trenches in the ground and found bright white chunks that slowly disappeared over a few days.",
+  fact:"Those chunks were water ice turning straight into gas! Phoenix was buried by winter frost when the arctic winter arrived.",
+  science:"<b>Science it made possible:</b> It confirmed water ice just under the surface, and even saw snow falling from Martian clouds."},
+ {id:"insight",name:"InSight",ico:"📳",lat:4.5,lon:135.62,year:2018,status:"off",st:"Silent since 2022",where:"Elysium Planitia",
+  short:"It listened to marsquakes.",
+  story:"InSight was a stationary lander with a super-sensitive seismometer. For four years it 'listened' to the inside of Mars. Dust slowly covered its solar panels until it ran out of power in December 2022.",
+  fact:"InSight recorded more than 1,300 marsquakes, and even felt meteorites hitting Mars!",
+  science:"<b>Science it made possible:</b> The first map of Mars' inside, showing the size of its crust, mantle and liquid metal core."},
+ {id:"ing",name:"Ingenuity",ico:"🚁",lat:18.44,lon:77.45,year:2021,status:"off",st:"Grounded",where:"Jezero Crater",
+  short:"The first aircraft to fly on another planet.",
+  story:"Ingenuity rode to Mars under the Perseverance rover. On 19 April 2021, it made the first powered, controlled flight on another planet. It was meant to fly 5 times, but it flew 72 times before a damaged rotor blade grounded it in January 2024.",
+  fact:"Mars' air is about 1% as thick as Earth's, so Ingenuity's blades had to spin around 2,500 times a minute to lift it.",
+  science:"<b>Science it made possible:</b> It proved that flying vehicles can scout ahead for rovers and future astronauts on Mars."}
+],
+deep: [
+ {id:"p10",name:"Pioneer 10",ico:"📡",x:120,y:140,year:1972,status:"off",st:"Silent since 2003",where:"Heading towards Taurus",
+  short:"The first spacecraft to visit Jupiter.",
+  story:"Pioneer 10 launched in 1972 and became the first spacecraft to cross the asteroid belt and fly past Jupiter. Its last signal reached Earth in 2003.",
+  fact:"It carries a metal plaque showing humans and where Earth is, a message in case anyone ever finds it.",
+  science:"<b>Science it made possible:</b> The first close-up images of Jupiter and measurements of its powerful radiation belts."},
+ {id:"v1d",name:"Voyager 1",ico:"💿",x:400,y:90,year:1977,status:"ok",st:"Still talking",where:"Interstellar space",
+  short:"The most distant human-made object.",
+  story:"Voyager 1 flew past Jupiter and Saturn, then kept going. In 2012 it became the first spacecraft to enter interstellar space, the space between the stars. It is now about 25 billion km away.",
+  fact:"It carries a Golden Record with sounds and music from Earth, greetings in 55 languages, and pictures of life on our planet.",
+  science:"<b>Science it made possible:</b> In 1990 it took the 'Pale Blue Dot' photo, which shows Earth as a tiny speck. Today it still measures particles and magnetic fields beyond the Sun's bubble."},
+ {id:"v2d",name:"Voyager 2",ico:"🎶",x:330,y:390,year:1977,status:"ok",st:"Still talking",where:"Interstellar space",
+  short:"The only visitor to Uranus and Neptune.",
+  story:"Voyager 2 is the only spacecraft ever to visit all four giant planets: Jupiter, Saturn, Uranus and Neptune. It entered interstellar space in 2018.",
+  fact:"Everything we know up close about Uranus and Neptune comes from Voyager 2's quick fly-bys in 1986 and 1989.",
+  science:"<b>Science it made possible:</b> It discovered new moons and rings, and a giant dark storm on Neptune."},
+ {id:"cas",name:"Cassini",ico:"🪐",x:250,y:250,year:2017,status:"gone",st:"Grand Finale",where:"Burned up in Saturn",
+  short:"It ended its mission by diving into Saturn.",
+  story:"Cassini studied Saturn for 13 years. When its fuel ran low in 2017, NASA steered it into Saturn's atmosphere on purpose, sending back data until the very end.",
+  fact:"NASA did this to protect Saturn's moons Enceladus and Titan, which might have conditions for life, from being contaminated by Earth microbes.",
+  science:"<b>Science it made possible:</b> It found water jets shooting from Enceladus, pointing to a hidden ocean under its ice."},
+ {id:"nh",name:"New Horizons",ico:"🐾",x:160,y:370,year:2006,status:"ok",st:"Still working",where:"Kuiper Belt",
+  short:"It showed us Pluto's heart.",
+  story:"New Horizons launched in 2006 and flew past Pluto in 2015, sending back the first detailed pictures. In 2019 it flew past Arrokoth, the most distant object ever explored up close.",
+  fact:"It discovered a giant heart-shaped plain of nitrogen ice on Pluto, now called Tombaugh Regio.",
+  science:"<b>Science it made possible:</b> It showed that Pluto has mountains of ice, blue skies and a surface that is still changing."}
+]};
+
+const STATUS = {ok:["b-ok","Active"],off:["b-off","Retired"],gone:["b-gone","Gone"]};
+const COLOR = {moon:"#cfd6e6",mars:"#e2683c",deep:"#6fa8ff"};
+let world="moon";
+
+function proj(lat,lon){ // orthographic for the Moon's near side
+  const r=210,cx=250,cy=250,la=lat*Math.PI/180,lo=lon*Math.PI/180;
+  return [cx+r*Math.cos(la)*Math.sin(lo), cy-r*Math.sin(la)];
+}
+function projMars(lat,lon){ // equirectangular
+  return [250+lon/180*240, 250-lat/90*120];
+}
+
+function drawMap(){
+  const svg=document.getElementById("map"); let s="";
+  if(world==="moon"){
+    svg.setAttribute("viewBox","0 0 500 500");
+    s+=`<defs><radialGradient id="mg" cx="40%" cy="38%"><stop offset="0" stop-color="#eef1f7"/><stop offset=".7" stop-color="#a9b1c3"/><stop offset="1" stop-color="#5d6478"/></radialGradient></defs>
+    <circle cx="250" cy="250" r="210" fill="url(#mg)"/>`;
+    // maria (approximate dark patches)
+    [[25,8,55,40],[18,-12,38,30],[-3,-35,75,55],[8,58,30,24],[-12,33,32,24],[35,-5,40,22],[-25,-15,28,20]].forEach(m=>{const[x,y]=proj(m[0],m[1]);s+=`<ellipse cx="${x}" cy="${y}" rx="${m[2]}" ry="${m[3]}" fill="#5f6679" opacity=".55"/>`});
+    document.getElementById("hint").textContent="Near side of the Moon (the side that always faces Earth). Positions are approximate.";
+  } else if(world==="mars"){
+    svg.setAttribute("viewBox","0 0 500 500");
+    s+=`<defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d7c8"/><stop offset=".12" stop-color="#c8562c"/><stop offset=".5" stop-color="#a8431f"/><stop offset=".88" stop-color="#c8562c"/><stop offset="1" stop-color="#f3d7c8"/></linearGradient></defs>
+    <rect x="10" y="130" width="480" height="240" rx="14" fill="url(#rg)"/>
+    <path d="M150 262 Q200 250 250 268 T330 262" stroke="#6d2a12" stroke-width="7" fill="none" opacity=".5"/>
+    <circle cx="125" cy="220" r="16" fill="#8d3517" opacity=".55"/>
+    <text x="250" y="395" text-anchor="middle" fill="#9aa5c4" font-size="12">◀ West · Equator in the middle · East ▶</text>`;
+    document.getElementById("hint").textContent="Flat map of Mars. The top and bottom are the icy poles. Positions are approximate.";
+  } else {
+    svg.setAttribute("viewBox","0 0 500 500");
+    s+=`<circle cx="250" cy="250" r="16" fill="#ffd166"/>`;
+    [45,70,100,135,175,215].forEach(r=>s+=`<circle cx="250" cy="250" r="${r}" fill="none" stroke="#26304f" stroke-dasharray="3 5"/>`);
+    s+=`<circle cx="250" cy="250" r="235" fill="none" stroke="#6fa8ff" stroke-opacity=".35" stroke-width="2"/><text x="250" y="30" text-anchor="middle" fill="#6fa8ff" font-size="12" opacity=".8">edge of the Sun's bubble (heliopause)</text>`;
+    document.getElementById("hint").textContent="Not to scale! Real distances are far too big to draw.";
+  }
+  ITEMS[world].forEach(it=>{
+    let x,y;
+    if(world==="moon")[x,y]=proj(it.lat,it.lon);
+    else if(world==="mars")[x,y]=projMars(it.lat,it.lon);
+    else{x=it.x;y=it.y;}
+    const c=it.status==="ok"?"#3ddc97":"#ffb547";
+    s+=`<g class="pin" data-id="${it.id}">${it.status==="ok"?`<circle class="pulse" cx="${x}" cy="${y}" r="6" fill="${c}"/>`:""}
+      <circle class="dot" cx="${x}" cy="${y}" r="6" fill="${c}" stroke="#000" stroke-width="1.5"/>
+      <text x="${x+10}" y="${y+4}">${it.name}</text></g>`;
+  });
+  svg.innerHTML=s;
+  svg.querySelectorAll(".pin").forEach(p=>p.onclick=()=>openStory(p.dataset.id));
+}
+
+function drawList(){
+  document.getElementById("list").innerHTML=ITEMS[world].map(it=>`
+    <div class="card" data-id="${it.id}"><div class="ico">${it.ico}</div><div>
+    <h4>${it.name}<span class="badge ${STATUS[it.status][0]}">${it.st}</span></h4>
+    <p>${it.year} · ${it.where} · ${it.short}</p></div></div>`).join("");
+  document.querySelectorAll(".card").forEach(c=>{
+    c.onclick=()=>openStory(c.dataset.id);
+    c.onmouseenter=()=>hl(c.dataset.id,true); c.onmouseleave=()=>hl(c.dataset.id,false);
+  });
+}
+function hl(id,on){const p=document.querySelector(`.pin[data-id="${id}"]`);if(p)p.classList.toggle("sel",on)}
+
+function find(id){for(const w in ITEMS){const f=ITEMS[w].find(i=>i.id===id);if(f)return f}}
+function openStory(id){
+  const it=find(id);
+  document.getElementById("storybox").innerHTML=`<button class="close" onclick="closeStory()">×</button>
+   <div class="big">${it.ico}</div><h3>${it.name}</h3>
+   <div class="meta"><span>📅 ${it.year}</span><span>📍 ${it.where}</span><span class="badge ${STATUS[it.status][0]}" style="margin:0">${it.st}</span></div>
+   <p>${it.story}</p><div class="fact"><b>Did you know?</b> ${it.fact}</div><p class="science">${it.science}</p>`;
+  document.getElementById("story").classList.add("open");
+}
+function closeStory(){document.getElementById("story").classList.remove("open")}
+document.getElementById("story").onclick=e=>{if(e.target.id==="story")closeStory()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeStory()});
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active"); world=t.dataset.w; drawMap(); drawList();
+});
+
+// Timeline
+const all=[];for(const w in ITEMS)ITEMS[w].forEach(i=>all.push({...i,w}));
+all.sort((a,b)=>a.year-b.year);
+document.getElementById("tl").innerHTML=all.map(i=>`<div class="tl" style="--c:${COLOR[i.w]}">
+  <div class="yr">${i.year}</div><h4>${i.ico} ${i.name}</h4><p>${i.short}</p></div>`).join("");
+
+// Quiz
+const Q=[
+ {q:"Which Apollo hardware is still used by scientists today?",o:["The moon buggies","The laser mirrors (retroreflectors)","The US flags","The golf balls"],a:1,e:"Observatories still bounce lasers off the Apollo 11, 14 and 15 mirrors to measure the Moon's distance."},
+ {q:"How long was Opportunity supposed to work on Mars?",o:["90 days","1 year","5 years","15 years"],a:0,e:"It was planned for 90 days but kept going for almost 15 years!"},
+ {q:"What made history on 19 April 2021?",o:["The first rover on Mars","The first powered flight on another planet","The first Moon landing","Voyager leaving the Solar System"],a:1,e:"Ingenuity made the first powered, controlled flight on another planet. It went on to fly 72 times."},
+ {q:"Why did NASA crash Cassini into Saturn?",o:["It was broken","To protect moons that might have life","To make a big explosion","By accident"],a:1,e:"Cassini was low on fuel, so NASA made sure it could never crash into Enceladus or Titan and contaminate them."},
+ {q:"What is on the Golden Record carried by the Voyagers?",o:["Gold bars","Maps of Mars","Sounds, music and greetings from Earth","Rock samples"],a:2,e:"The Golden Records carry sounds, music, pictures and greetings in 55 languages, a message from Earth."}
+];
+let qi=0,score=0;
+function renderQ(){
+  const box=document.getElementById("quizbox");
+  if(qi>=Q.length){
+    const msg=score===5?"🏅 Perfect! You've earned the Space Historian badge!":score>=3?"🚀 Great job, explorer!":"🌱 Explore the map again and try once more!";
+    box.innerHTML=`<h3>You scored ${score} / ${Q.length}</h3><p style="color:var(--muted);margin-bottom:10px">${msg}</p><button class="btn" onclick="qi=0;score=0;renderQ()">Play again</button>`;return;
+  }
+  const c=Q[qi];
+  box.innerHTML=`<div class="q-prog">Question ${qi+1} of ${Q.length}</div><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div>
+   <h3>${c.q}</h3><div class="opts">${c.o.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}</div>
+   <div class="explain" id="ex">${c.e}</div><button class="btn qnext" id="nx">Next →</button>`;
+  box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; box.querySelectorAll(".opt").forEach(x=>x.disabled=true);
+    box.querySelectorAll(".opt")[c.a].classList.add("right");
+    if(i===c.a)score++; else b.classList.add("wrong");
+    document.getElementById("ex").classList.add("show");
+    const nx=document.getElementById("nx"); nx.style.display="inline-block"; nx.onclick=()=>{qi++;renderQ()};
+  });
+}
+
+// Counters
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target,t=+el.dataset.count;let n=0;const st=Math.max(1,Math.ceil(t/60));
+  const iv=setInterval(()=>{n=Math.min(t,n+st);el.textContent=n;if(n>=t)clearInterval(iv)},20);io.unobserve(el)}));
+document.querySelectorAll("[data-count]").forEach(el=>io.observe(el));
+
+// Stars
+const cv=document.getElementById("stars"),cx=cv.getContext("2d");let S=[];
+function rs(){cv.width=innerWidth;cv.height=innerHeight;S=Array.from({length:Math.floor(innerWidth*innerHeight/5000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.3,p:Math.random()*6}))}
+function tw(t){cx.clearRect(0,0,cv.width,cv.height);S.forEach(s=>{cx.globalAlpha=.4+.6*Math.abs(Math.sin(t/1400+s.p));cx.fillStyle="#fff";cx.beginPath();cx.arc(s.x,s.y,s.r,0,7);cx.fill()});requestAnimationFrame(tw)}
+addEventListener("resize",rs);rs();requestAnimationFrame(tw);
+
+drawMap();drawList();renderQ();
+</script>
+</body>
+</html>
